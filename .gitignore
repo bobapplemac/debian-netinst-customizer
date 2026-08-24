@@ -1,0 +1,15 @@
+# Generated source media and Debian verification metadata
+/source/
+
+# Per-build intermediate files
+/work/
+
+# Generated customized ISOs and checksums
+/output/
+
+# Temporary/editor files
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
