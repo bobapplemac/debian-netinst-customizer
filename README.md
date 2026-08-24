@@ -19,6 +19,23 @@ The project automatically downloads and verifies the latest supported Debian net
 - Generates a SHA-256 checksum for the completed ISO
 - Retains per-build GRUB and checksum files for inspection
 
+## Quick Start
+
+```bash
+git clone https://github.com/bobapplemac/debian-netinst-customizer.git
+cd debian-netinst-customizer
+chmod +x ./build-debian-netinst-iso.sh
+./build-debian-netinst-iso.sh
+```
+
+The completed ISO and its SHA-256 checksum will be written to:
+
+```text
+output/
+```
+
+Review and customize `config/preseed.cfg` and the files under `config/OEM/` before building if you want to change the default installation behavior.
+
 ## Project Layout
 
 ```text
@@ -73,37 +90,25 @@ sudo apt install gpgv debian-keyring
 
 ## Usage
 
-Clone the repository:
-
-```bash
-git clone https://github.com/<username>/debian-netinst-customizer.git
-cd debian-netinst-customizer
-```
-
-Review and customize:
-
-```text
-config/preseed.cfg
-config/OEM/
-```
-
-Then run:
+Run the build script from the repository root:
 
 ```bash
 ./build-debian-netinst-iso.sh
 ```
 
-The completed ISO and its SHA-256 checksum will be written to:
+The completed ISO and checksum are written to `output/`.
+
+By default, generated images use the build tag `custom`. For example:
 
 ```text
-output/
+output/debian-13.6.0-amd64-netinst-custom260824.iso
+output/debian-13.6.0-amd64-netinst-custom260824.iso.sha256
 ```
 
-For example:
+The tag can be overridden for a single build:
 
-```text
-output/debian-13.6.0-amd64-netinst-ajm260824.iso
-output/debian-13.6.0-amd64-netinst-ajm260824.iso.sha256
+```bash
+OUTPUT_TAG=example ./build-debian-netinst-iso.sh
 ```
 
 ## Customization
