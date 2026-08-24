@@ -5,7 +5,7 @@
 #
 # ------------------------------------------------------------------------------------------
 # File:        build-debian-netinst-iso.sh
-# Revision:    r10
+# Revision:    r11
 # Modified:    2026-08-24
 # Author:      Andrew J. Moore
 # License:     Zero-Clause BSD (0BSD)
@@ -26,8 +26,9 @@
 #              gpgv + debian-keyring
 #                                   Authenticates Debian's signed SHA256SUMS file.
 #
-# Output:      Same filename as the source ISO with "-ajmYYMMDD" appended, plus a SHA256
-#              checksum file for the customized ISO.
+# Output:      Same filename as the source ISO with "-<tag>YYMMDD" appended, plus a SHA256
+#              checksum file for the customized ISO. The build tag defaults to "custom" and may
+#              be overridden with the OUTPUT_TAG environment variable.
 #
 # Project:
 #              config/    Customization inputs (preseed.cfg and OEM/)
@@ -37,9 +38,9 @@
 #
 # Example:
 #              source/13.6.0/debian-13.6.0-amd64-netinst.iso
-#                  -> output/debian-13.6.0-amd64-netinst-ajm260820.iso
-#                  -> output/debian-13.6.0-amd64-netinst-ajm260820.iso.sha256
-#                  -> work/debian-13.6.0-amd64-netinst-ajm260820/
+#                  -> output/debian-13.6.0-amd64-netinst-custom260820.iso
+#                  -> output/debian-13.6.0-amd64-netinst-custom260820.iso.sha256
+#                  -> work/debian-13.6.0-amd64-netinst-custom260820/
 # ------------------------------------------------------------------------------------------
 
 set -euo pipefail
@@ -47,6 +48,9 @@ set -euo pipefail
 DEBIAN_MAJOR_VERSION=13
 DEBIAN_CODENAME="trixie"
 DEBIAN_ISO_BASE_URL="https://get.debian.org/cdimage/release/current/amd64/iso-cd"
+
+# Build tag appended to customized ISO filenames. Override at runtime with OUTPUT_TAG=<tag>.
+OUTPUT_TAG="${OUTPUT_TAG:-custom}"
 
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="${ROOT_DIR}/config"
@@ -525,7 +529,7 @@ if [[ "${SOURCE_MAJOR_VERSION}" != "${DEBIAN_MAJOR_VERSION}" ]]; then
 fi
 
 BUILD_DATE="$(date +%y%m%d)"
-OUTPUT_FILENAME="${SOURCE_FILENAME}-ajm${BUILD_DATE}"
+OUTPUT_FILENAME="${SOURCE_FILENAME}-${OUTPUT_TAG}${BUILD_DATE}"
 OUTPUT_ISO="${OUTPUT_DIR}/${OUTPUT_FILENAME}.iso"
 OUTPUT_SHA256_FILE="${OUTPUT_ISO}.sha256"
 BUILD_WORK_DIR="${WORK_DIR}/${OUTPUT_FILENAME}"
