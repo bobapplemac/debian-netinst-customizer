@@ -1,0 +1,23 @@
+FROM debian:trixie-slim
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        binutils \
+        build-essential \
+        ca-certificates \
+        check \
+        curl \
+        debhelper \
+        debian-keyring \
+        devscripts \
+        dpkg-dev \
+        fakeroot \
+        gzip \
+        libdebconfclient0-dev \
+        libdebian-installer4-dev \
+        libiw-dev \
+        libsubunit-dev \
+        patch \
+        po-debconf \
+        xz-utils \
+    && rm -rf /var/lib/apt/lists/*
