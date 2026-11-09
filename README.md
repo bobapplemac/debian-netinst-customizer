@@ -14,6 +14,9 @@ The project automatically downloads and verifies the latest supported Debian net
 - Validates preseed file formatting before building
 - Injects `preseed.cfg` and additional OEM files into the ISO
 - Adds automated ext4 and XFS installation entries to the UEFI GRUB menu
+- Optionally integrates a Trixie-built VLAN-capable Debian Installer `netcfg`
+- Builds the Trixie backport locally with rootless `sbuild` or in Docker
+- Offers to install missing Debian build tools for local builds
 - Preserves the standard Debian Installer entries as a fallback
 - Verifies the customized ISO after creation
 - Generates a SHA-256 checksum for the completed ISO
@@ -28,6 +31,10 @@ chmod +x ./build-debian-netinst-iso.sh
 ./build-debian-netinst-iso.sh
 ```
 
+An interactive run asks whether to include VLAN support and offers to install
+missing packages. If VLAN support is selected, the main builder automatically
+builds or reuses the verified `netcfg` backport before remastering the ISO.
+
 The completed ISO and its SHA-256 checksum will be written to:
 
 ```text
@@ -41,6 +48,12 @@ Review and customize `config/preseed.cfg` and the files under `config/OEM/` befo
 ```text
 debian-netinst-customizer/
 ├── build-debian-netinst-iso.sh
+├── patches/
+│   └── netcfg/
+│       └── 0001-trixie-vlan-backport.patch
+├── tools/
+│   ├── build-netcfg-backport.sh
+│   └── Dockerfile.netcfg-backport
 ├── config/
 │   ├── preseed.cfg
 │   └── OEM/
@@ -65,28 +78,32 @@ The `source/`, `work/`, and `output/` directories are created automatically as n
 
 ## Requirements
 
-Required:
+The main build script detects missing packages and offers to install them with
+APT. Its base requirements are:
 
 - Bash
 - `curl`
 - `xorriso`
+- `gpgv`
+- `debian-keyring`
 
 On Debian-based systems:
 
 ```bash
-sudo apt install curl xorriso
+sudo apt install curl xorriso gpgv debian-keyring
 ```
 
-Optional:
+The signing tools authenticate Debian's `SHA256SUMS` metadata in addition to
+verifying the ISO checksum.
 
-- `gpgv`
-- `debian-keyring`
+For a native VLAN backport build, the helper similarly detects and offers to
+install `sbuild`, `mmdebstrap`, Debian packaging tools, and the `netcfg` build
+dependencies. Only package installation uses `sudo`; the build itself uses a
+rootless Trixie `sbuild` environment.
 
-These allow the build script to authenticate Debian's signed `SHA256SUMS` metadata in addition to verifying the ISO checksum.
-
-```bash
-sudo apt install gpgv debian-keyring
-```
+Alternatively, the backport can be built in Docker. Docker is never installed
+automatically. When a working Docker command and daemon are detected, automatic
+backend selection offers Docker and defaults to it.
 
 ## Usage
 
@@ -109,7 +126,57 @@ The tag can be overridden for a single build:
 
 ```bash
 OUTPUT_TAG=example ./build-debian-netinst-iso.sh
+# or
+./build-debian-netinst-iso.sh --output-tag example
 ```
+
+### Optional VLAN-capable installer
+
+For an interactive build, run the main builder and answer its VLAN question:
+
+```bash
+./build-debian-netinst-iso.sh
+```
+
+For explicit or non-interactive use:
+
+```bash
+./build-debian-netinst-iso.sh --vlan --non-interactive
+```
+
+The `--vlan` option automatically invokes `tools/build-netcfg-backport.sh`.
+The verified artifact is cached and reused. Use `--rebuild-netcfg` to force a
+fresh build.
+
+Choose the build backend explicitly when desired:
+
+```bash
+# Rootless clean Trixie sbuild on Debian 13, LMDE 7, or a compatible host
+./build-debian-netinst-iso.sh --vlan --netcfg-backend local
+
+# Clean Debian Trixie container; Docker must already be installed and usable
+./build-debian-netinst-iso.sh --vlan --netcfg-backend docker
+```
+
+The equivalent environment variables remain supported:
+
+```bash
+ENABLE_VLAN_NETCFG=true NETCFG_BUILD_BACKEND=auto ./build-debian-netinst-iso.sh
+```
+
+Missing packages are offered interactively. For unattended provisioning, make
+the choice explicit with `--install-missing` or `--no-install`.
+
+The custom automated install entries ask whether to use an 802.1Q VLAN. The
+default is `false`, so pressing Enter follows the existing untagged DHCP path.
+If selected, the installer asks for a VLAN ID from 1 through 4094 and persists
+the dotted VLAN interface through Trixie's `ifupdown` configuration. Standard
+Debian Installer menu entries retain upstream prompt priorities.
+
+This backport is specific to Debian 13 Trixie. Debian 14 includes the
+VLAN-aware `netcfg` natively; when Debian 14 becomes stable and this project is
+updated to target it, the backport build, patch, and ISO repository replacement
+should be removed rather than carried forward.
 
 ## Customization
 
