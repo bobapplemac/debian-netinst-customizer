@@ -27,7 +27,6 @@ The project automatically downloads and verifies the latest supported Debian net
 ```bash
 git clone https://github.com/bobapplemac/debian-netinst-customizer.git
 cd debian-netinst-customizer
-chmod +x ./build-debian-netinst-iso.sh
 ./build-debian-netinst-iso.sh
 ```
 
